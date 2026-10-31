@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: GPL-3.0-only
+# (PSY) the browser emulator built from the current source (not the pinned web/EMULATOR commit) and published to
+# GitHub Pages: https://<user>.github.io/<repo>/ . One-time setup: Settings > Pages > Source: GitHub Actions.
+name: psy-emulator
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: psy-pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install Pillow==12.3.0 numpy==2.3.5 fonttools==4.61.1
+      - name: generated headers (fonts, icons, palettes, shapes, tables, samples)
+        run: python3 -c "import sys; sys.path.insert(0, 'tools'); import build; build.generate()"
+      - uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 6.0.11
+      - name: the emulator
+        run: sh web/emu/build.sh
+      - name: the site
+        run: |
+          mkdir -p build/pages
+          cp -r build/emu/. build/pages/
+          touch build/pages/.nojekyll
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/pages
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
