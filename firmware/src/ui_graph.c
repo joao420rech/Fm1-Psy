@@ -943,9 +943,9 @@ static void page_title(char *ti)
  * .. orange .. yellow .. white (other palettes: their surface toward their accent and text) */
 static uint16_t heat_col(int32_t v)
 {
-    static const uint16_t H[7] = {0x3955u, 0x82DFu, 0xFA09u, 0xFBA3u, 0xFDEBu, 0xFF99u, 0xFFFFu};   /* (0.8.9, the skins' mock-up: the 0.6's
-                                                         * ramp, indigo violet red orange amber cream white; was cyan blue violet
-                                                         * red orange yellow white) */
+    static const uint16_t H[7] = {0x208Au, 0x69DBu, 0xC9FCu, 0xFA35u, 0x7FEDu, 0xD7F9u, 0xFFFFu};   /* (PSY) bioluminescence: indigo violet magenta UV pink
+                                                         * toxic green mint white, the loudest glowing green like fungus in the dark
+                                                         * (JIANT 0.8.9: indigo violet red orange amber cream white) */
     int32_t k;
     v = clamp(v, 0, 256);
     if (settings.palette != UI_JIANT_INDEX)
