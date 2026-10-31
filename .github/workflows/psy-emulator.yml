@@ -40,9 +40,9 @@ jobs:
             exit 1
           fi
           tail -n 2 /tmp/emu.log
-          # (the current edition's page)
+          # (the PSY page: web/emu/index.html, with the version filled in)
           VERSION=$(sed -n 's/^#define FELUCCA_VERSION "\([^"]*\)".*/\1/p' firmware/src/felucca.c)
-          sed -e "s/@VERSION@/$VERSION/g" -e "s/@PREVIEW@//g" web/emu/index-additive.html > build/emu/index.html
+          sed -e "s/@VERSION@/$VERSION/g" -e "s/@PREVIEW@//g" web/emu/index.html > build/emu/index.html
       - name: the site
         run: |
           mkdir -p build/pages
