@@ -270,6 +270,20 @@ static const preset_t ANALOG_PRESETS[] = {
     {"DARK PAD", {0, 18, 64, 6, 38, 30, 10, -12}, {70, 95, 120, 100}, 12, TAG(PAD), FX(0, 55, 30, 75), PAT(5)},
     {"GLASS KEYS", {3, 8, 60, 0, 120, 0, 0, 19}, {0, 82, 20, 65}, 0, TAG(KEYS), FX(0, 35, 35, 50), PAT(6)},
     {"ORGAN SQR", {1, 4, 64, 0, 100, 0, 5, 12}, {0, 64, 127, 30}, 0, TAG(KEYS), FX(0, 35, 10, 35), PAT(6)},
+    /* (PSY) the night's palette for psytrance (forest, dark, night) and its ambient: basses with a short filter
+     * envelope that pump between the kicks, leads of saw with the resonance up, pads that never see daylight. WAVE
+     * 0 SAW .. 7 SAW3; {WAVE DTN MIX NOIS CUT RES DRV INT}; ATK DEC SUS REL; ENV -> FILTER */
+    {"PSY BASS", {0, 6, 64, 0, 34, 62, 30, -12}, {0, 42, 20, 14}, 46, 1 | TAG(BASS), FX(15, 0, 5, 5)},
+    {"ROLL BASS", {0, 4, 64, 0, 30, 55, 35, -12}, {0, 32, 0, 10}, 52, 1 | TAG(BASS), FX(20, 0, 5, 5)},
+    {"GLIDE BAS", {7, 10, 64, 0, 36, 48, 25, -12}, {0, 60, 60, 22}, 30, 1 | TAG(BASS), FX(15, 5, 10, 10)},
+    {"DARK BASS", {1, 4, 80, 8, 30, 70, 60, -12}, {0, 45, 30, 18}, 40, 1 | TAG(BASS), FX(40, 0, 5, 10)},
+    {"SAW SCRM", {0, 14, 64, 0, 62, 80, 55, 12}, {2, 70, 90, 40}, 25, 1 | TAG(LEAD), FX(35, 20, 50, 40)},
+    {"ZAP LEAD", {5, 13, 100, 0, 56, 60, 40, 0}, {0, 50, 70, 35}, 40, 1 | TAG(LEAD), FX(25, 10, 55, 40)},
+    {"PSY LEAD", {7, 18, 64, 0, 70, 45, 30, 7}, {3, 60, 100, 55}, 20, 1 | TAG(LEAD), FX(25, 35, 60, 45)},
+    {"NIGHT LD", {0, 8, 40, 5, 48, 70, 40, -12}, {4, 55, 80, 50}, 30, 1 | TAG(LEAD), FX(30, 25, 55, 55)},
+    {"NIGHT PAD", {4, 16, 64, 6, 30, 28, 8, -12}, {85, 95, 120, 105}, 10, TAG(PAD), FX(0, 60, 35, 85)},
+    {"CAVE", {0, 24, 50, 12, 24, 35, 5, -24}, {100, 100, 127, 115}, 8, TAG(PAD), FX(5, 50, 30, 90)},
+    {"VOID", {2, 6, 64, 20, 22, 20, 0, -12}, {110, 100, 127, 120}, 6, TAG(FX), FX(0, 40, 40, 95)},
 };
 
 static const engine_t ENG_ANALOG = {

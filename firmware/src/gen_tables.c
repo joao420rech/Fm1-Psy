@@ -18,7 +18,7 @@ enum { GP_DRUMS, GP_BASS, GP_CHORDS, GP_ARP, GP_LEAD, GP_N };   /* the parts the
 enum { DM_HOUSE, DM_DEEP, DM_MICRO, DM_TECHHOUSE, DM_TECHNO, DM_DETROIT, DM_DUBTECH, DM_HYPNO, DM_HARD, DM_ELECTRO,
        DM_EBM, DM_ITALO, DM_SYNTHPOP, DM_DARKWAVE, DM_POSTPUNK, DM_TRIBAL, DM_RBOX, DM_KLING, DM_MOTORIK, DM_INDIE,
        DM_SHOEGAZE, DM_FUNK, DM_DISCO, DM_BOOMBAP, DM_TRAP, DM_UKG, DM_DUBSTEP, DM_BREAKS, DM_DNB, DM_ONEDROP,
-       DM_STEPPERS, DM_ROCKERS, DM_JAZZ, DM_BOSSA, DM_AFRO, DM_SPARSE, DM_IDM, DM_JOYDIV, DM_NEWORDER, DM_NONE };
+       DM_STEPPERS, DM_ROCKERS, DM_JAZZ, DM_BOSSA, DM_AFRO, DM_SPARSE, DM_IDM, DM_JOYDIV, DM_NEWORDER, DM_PSY, DM_DARKPSY, DM_FOREST, DM_NONE };
 /* (0.9.7, flash) the maps and the pools below are the text tools/gen_drum_maps.py reads (not compiled): build/gen/
  * gen_drum_maps.h holds them packed, each lane once at 16 levels a nibble (GM_LANE), the tables as lane numbers
  * (DRUM_MAP_I, HAT_POOL_I ..: gen.c gm_level) */
@@ -66,6 +66,11 @@ static const char *const DRUM_MAP[][8] = {
      * snare and a clap, driven sixteenths, open hats off the beat, toms into the one) */
     [DM_JOYDIV]    = {"X..X..X.X..X..X.", "....X.......X...", "", "7777777777777777", "", "..........4...5.", "", ""},
     [DM_NEWORDER]  = {"X...X...X...X...", "....X.......X...", "....5.......5...", "7676767676767676", "..6...6...6...6.", "..............44", "", ""},
+    /* (PSY) psytrance at night: four on the floor, the open hat on the off beat, a closed hat in sixteenths that
+     * breathes, a rim and a cowbell that move from bar to bar. The dark maps drop the clap altogether */
+    [DM_PSY]       = {"X...X...X...X...", "", "....4.......4...", "5353535353535353", "..9...9...9...9.", "", ".3....3.3....3..", ""},
+    [DM_DARKPSY]   = {"X...X...X...X...", "", "", "6464646464646464", "..8...8...8...8.", "..4..4....4..4..", "..3..3.4..3..3..", "5..5..5..5..5..."},
+    [DM_FOREST]    = {"X...X...X...X...", "", "", "4.4.4.4.4.4.4.4.", "..7...7...7...7.", "......5.......5.", ".4....4.4....4..", "2.2...2.2...2..."},
     [DM_NONE]      = {"", "", "", "", "", "", "", ""},
 };
 /* (0.6.97) a throw's own hats and percussion: a hat pattern, an open hat pattern and a percussion line from these pools
@@ -87,7 +92,7 @@ static const uint8_t HAT_CELL[5][4] = {{100, 100, 100, 100}, {100, 55, 80, 55}, 
 enum { FL_NONE, FL_ROLL, FL_TOM, FL_DROP, FL_HAT, FL_LINEAR, FL_KICK16, FL_DUB, FL_BREAK };
 /* the kits: offsets on the factory kit's {PITCH PMOD DECAY NOISE COLOR} a lane (both patches), then the DRUM track's
  * TONE DECY NOIS DRV */
-enum { KIT_DEF, KIT_909, KIT_808, KIT_CLICK, KIT_INDUS, KIT_SOFT, KIT_DUB, KIT_BREAKS, KIT_N };
+enum { KIT_DEF, KIT_909, KIT_808, KIT_CLICK, KIT_INDUS, KIT_SOFT, KIT_DUB, KIT_BREAKS, KIT_PSY, KIT_N };
 typedef struct { int8_t d[8][5]; int8_t tone, decy, nois, drv; } gkit_t;
 static const gkit_t KIT[KIT_N] = {
     [KIT_DEF]    = {{{0}}, 0, 0, 0, 0},
@@ -98,6 +103,8 @@ static const gkit_t KIT[KIT_N] = {
     [KIT_SOFT]   = {{{0, -10, 6, 6, -25}, {-2, 0, 8, 14, -18}, {-2, 0, 6, 0, -20}, {-4, 0, 2, 0, -30}, {-4, 0, 6, 0, -30}, {-2, -10, 6, 6, -20}, {-2, 0, 4, 0, -20}, {-2, 0, 4, 0, -20}}, -20, 4, 4, 0},
     [KIT_DUB]    = {{{-6, -10, 18, 0, -20}, {-6, 0, 12, 8, -10}, {-2, 0, 6, 0, -10}, {-2, 0, 0, 0, -20}, {-2, 0, 6, 0, -20}, {-4, 0, 10, 0, -10}, {-4, 0, 10, 0, 0}, {0, 0, 6, 0, -10}}, -16, 8, 0, 0},
     [KIT_BREAKS] = {{{2, 6, -4, 8, 10}, {2, 6, 2, 16, 20}, {0, 0, 2, 4, 10}, {0, 0, 4, 6, 0}, {0, 0, 8, 6, 0}, {2, 6, 0, 8, 10}, {0, 0, 0, 4, 10}, {0, 0, 0, 0, 0}}, 4, 0, 6, 10},
+    /* (PSY) the kick short, with a hard click and a fast fall; the hats short and dry */
+    [KIT_PSY]    = {{{-2, 40, -14, 0, 30}, {0, 0, 4, 10, 10}, {0, 0, 4, 0, 0}, {6, 0, -8, 0, 10}, {4, 0, -4, 0, 10}, {2, 10, 0, 0, 10}, {0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}}, 4, -4, 0, 8},
 };
 
 /* ----------------------------------------------------------------------------------------------- bass archetypes --- */
@@ -112,7 +119,7 @@ enum { BA_OFFBEAT, BA_OFFOCT, BA_BOUNCE, BA_DEEPWALK, BA_ROLL16, BA_OCTBNC, BA_D
        BA_PUNK16, BA_DUST, BA_MCCART, BA_HOOK, BA_MOTORIK, BA_ANGULAR, BA_INDIE, BA_ONEDROP, BA_ONEDROP2, BA_STEPPERS,
        BA_ROCKERS, BA_DUB, BA_BOOMBAP, BA_TRAP, BA_DNB, BA_JUNGLE, BA_WOBBLE, BA_PEDAL, BA_FIFTHS, BA_NEOARP,
        BA_SUICIDE, BA_DARK8, BA_SEQ16, BA_ACID, BA_NITZER1, BA_NITZER2, BA_NITZER3, BA_RADIO, BA_HOOK2, BA_BLUEMON,
-       BA_CEREMONY, BA_N };
+       BA_CEREMONY, BA_PSYROLL, BA_PSYGLD, BA_PSYGAL, BA_PSYOCT, BA_DKWALK, BA_N };
 /* (0.9.7, flash) the archetypes below are the text tools/gen_drum_maps.py reads (not compiled): build/gen/gen_bass.h holds
  * them a byte a step (BA_STEP: the note's code | the flag's << 4; gen.c ba_note, ba_flag), each its first step and bars */
 typedef struct { uint16_t at; uint8_t bars; } barch_t;
@@ -184,6 +191,14 @@ static const barch_t BASS_ARCH[BA_N] = {
     [BA_HOOK2]    = {"R.5.8.7.R.5.8.5.R.5.8.7.8.7.5.3.", "a.......a.......a.......a.......", 2},
     [BA_BLUEMON]  = {"R8R8R8R8R8R8R8R8R8R8R8R8R8R85858", "a...a...a...a...a...a...a...a...", 2},
     [BA_CEREMONY] = {"R.R.R.3.5.5.5.3.R.R.R.3.5.5.7.8.", "a.......a.......a.......a.......", 2},
+    /* (PSY) the rolling bass: three notes in the gaps between the kicks (steps 1 2 3 of each beat), the first
+     * accented, the last a ghost; BA_PSY above is the plain off beat. GLD slides between them, GAL gallops, OCT jumps an
+     * octave, DKWALK is the heavy one: dead notes and a climb to the second at the bar's end */
+    [BA_PSYROLL]  = {".RRR.RRR.RRR.RRR", ".a.g.a.g.a.g.a.g", 1},
+    [BA_PSYGLD]   = {".RRR.R8R.RRR.R5R", ".a.s.a.s.a.s.a.s", 1},
+    [BA_PSYGAL]   = {".R.RR.R.R.RR.R.R", ".a..a......a....", 1},
+    [BA_PSYOCT]   = {".R8R.R8R.R8R.R8R", ".a.g.a.g.a.g.a.g", 1},
+    [BA_DKWALK]   = {".RRxRRxx.RRxRR2x", ".a...a...a...a..", 1},
 };
 #endif
 #include "gen_bass.h"
@@ -305,7 +320,8 @@ typedef struct {
 } grecipe_t;
 enum { SR_SUB, SR_ACID, SR_REESE, SR_FMBASS, SR_ROCKBASS, SR_HOOK, SR_WOW, SR_PAD, SR_STRINGS, SR_CHOIR, SR_ORGAN,
        SR_EP, SR_STAB, SR_DUBCHORD, SR_PLUCK, SR_BELL, SR_LEAD, SR_VOXLEAD, SR_CHIP, SR_KEYS, SR_DRONE, SR_NOISE,
-       SR_TEXTURE, SR_HOOVER, SR_WALL, SR_GTR, SR_SINEKEY, SR_EBMBASS, SR_N };
+       SR_TEXTURE, SR_HOOVER, SR_WALL, SR_GTR, SR_SINEKEY, SR_EBMBASS, SR_PSYBASS, SR_PSYGLIDE, SR_PSYDARK, SR_PSYLEAD,
+       SR_PSYPAD, SR_FOREST, SR_NIGHT, SR_MANTRA, SR_PSYARP, SR_PSYSUB, SR_N };
 static const grecipe_t RECIPE[SR_N] = {
     [SR_SUB]      = {{EG_A, EG_A, EG_LO}, {"SUB BASS", "TRI BASS", "SINE"}, {0, 1}, {55, 75}, {90, 120}, {15, 35}, 0, {30, 48}, {0, 10}, {0, 10}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, 0, V_LEGATO},
     [SR_ACID]     = {{EG_A, EG_A, EG_PH}, {"ACID", "RESO", "SQR BASS"}, {0, 2}, {38, 60}, {0, 30}, {20, 40}, 0, {40, 64}, {55, 90}, {40, 62}, {0, 0}, {0, 0}, {12, 36}, {0, 0}, 30, V_LEGATO},
@@ -336,6 +352,20 @@ static const grecipe_t RECIPE[SR_N] = {
     [SR_SINEKEY]  = {{EG_A, EG_FM, EG_PH}, {"GLASS KEYS", "WOOD", "SINE KEY"}, {0, 4}, {70, 90}, {30, 60}, {50, 80}, 0, {60, 90}, {0, 15}, {0, 15}, {0, 0}, {0, 0}, {0, 0}, {0, 20}, 0, V_POLY},
     /* (0.6.95) the EBM bass: a square, short and punchy, the filter's envelope on it, driven */
     [SR_EBMBASS]  = {{EG_A, EG_A, EG_PH}, {"SYN BASS", "HARD BASS", "SQR BASS"}, {0, 1}, {34, 50}, {10, 40}, {12, 25}, 0, {58, 80}, {15, 35}, {25, 45}, {0, 0}, {0, 0}, {18, 40}, {0, 0}, 0, V_LEGATO},
+    /* (PSY) the night's recipes. The basses: a saw over its sub, the filter's envelope short and deep, the cutoff low;
+     * ENV in the filter is what makes it pump. The lead: a saw with the resonance up and the drive on, a slow LFO on
+     * the filter. The pad and the texture never open the filter. FOREST is ANIMAL (owls, crickets, toads, bats) over
+     * nothing, NIGHT is the air and the rain, MANTRA a chant */
+    [SR_PSYBASS]  = {{EG_A, EG_A, EG_A}, {"PSY BASS", "ROLL BASS", "FAT BASS"}, {0, 2}, {34, 50}, {0, 25}, {10, 20}, 0, {30, 46}, {50, 72}, {40, 60}, {0, 0}, {0, 0}, {15, 35}, {0, 0}, 0, V_MONO},
+    [SR_PSYGLIDE] = {{EG_A, EG_A, EG_A}, {"GLIDE BAS", "PSY BASS", "REESE"}, {0, 2}, {55, 75}, {50, 70}, {18, 30}, 0, {32, 48}, {40, 60}, {20, 44}, {0, 0}, {0, 0}, {10, 30}, {10, 25}, 45, V_LEGATO},
+    [SR_PSYDARK]  = {{EG_A, EG_A, EG_A}, {"DARK BASS", "ROLL BASS", "REESE"}, {0, 2}, {38, 55}, {20, 40}, {14, 26}, 0, {28, 44}, {60, 85}, {35, 55}, {0, 0}, {0, 0}, {40, 70}, {0, 10}, 0, V_MONO},
+    [SR_PSYLEAD]  = {{EG_A, EG_A, EG_A}, {"SAW SCRM", "PSY LEAD", "ZAP LEAD"}, {0, 6}, {50, 80}, {60, 100}, {35, 60}, 0, {54, 74}, {40, 78}, {20, 45}, {6, 22}, {8, 24}, {25, 55}, {10, 40}, 20, V_LEGATO},
+    [SR_PSYPAD]   = {{EG_A, EG_A, EG_A}, {"NIGHT PAD", "CAVE", "DARK PAD"}, {80, 115}, {90, 100}, {115, 127}, {95, 125}, 0, {26, 46}, {20, 40}, {0, 8}, {6, 18}, {2, 6}, {0, 10}, {40, 70}, 0, V_POLY},
+    [SR_FOREST]   = {{ENGI_ANIMAL, ENGI_ANIMAL, ENGI_ANIMAL}, {"OWL", "KATYDID", "CRICKET"}, {10, 60}, {80, 100}, {110, 127}, {50, 110}, 255, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {20, 50}, 0, V_POLY},
+    [SR_NIGHT]    = {{EG_NO, EG_NO, EG_NO}, {"TAPE AIR", "RAIN", "WIND"}, {80, 120}, {90, 100}, {110, 127}, {90, 125}, 255, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {20, 50}, 0, V_POLY},
+    [SR_PSYARP]   = {{EG_A, EG_A, EG_A}, {"NIGHT LD", "ZAP LEAD", "PSY LEAD"}, {0, 4}, {30, 54}, {0, 30}, {20, 40}, 0, {44, 66}, {40, 70}, {25, 50}, {0, 10}, {4, 12}, {20, 45}, {10, 30}, 0, V_POLY},
+    [SR_PSYSUB]   = {{EG_A, EG_A, EG_A}, {"SUB BASS", "CAVE", "VOID"}, {20, 70}, {80, 100}, {100, 127}, {60, 100}, 0, {26, 40}, {0, 10}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, 0, V_LEGATO},
+    [SR_MANTRA]   = {{EG_VO, EG_VO, EG_VO}, {"CHANT", "OOH PAD", "WHISPER"}, {40, 90}, {85, 100}, {100, 120}, {70, 110}, 0, {40, 64}, {10, 25}, {0, 6}, {4, 10}, {2, 6}, {0, 10}, {50, 80}, 0, V_POLY},
 };
 /* (0.6.95) a throw its own: the neighbours a throw may take instead (the drum map's family, the chords' play, a role's
  * recipe), so two throws of a genre are not the same piece in another key */
@@ -346,6 +376,7 @@ static const uint8_t DM_ALT[DM_NONE][2] = {
     [DM_ELECTRO] = {DM_RBOX, DM_KLING}, [DM_EBM] = {DM_HARD, DM_DARKWAVE}, [DM_ITALO] = {DM_DISCO, DM_SYNTHPOP},
     [DM_SYNTHPOP] = {DM_ITALO, DM_RBOX}, [DM_DARKWAVE] = {DM_POSTPUNK, DM_EBM}, [DM_POSTPUNK] = {DM_JOYDIV, DM_NEWORDER},
     [DM_JOYDIV] = {DM_POSTPUNK, DM_NEWORDER}, [DM_NEWORDER] = {DM_POSTPUNK, DM_JOYDIV},
+    [DM_PSY] = {DM_DARKPSY, DM_FOREST}, [DM_DARKPSY] = {DM_PSY, DM_FOREST}, [DM_FOREST] = {DM_PSY, DM_DARKPSY},
     [DM_TRIBAL] = {DM_POSTPUNK, DM_AFRO}, [DM_RBOX] = {DM_SYNTHPOP, DM_KLING}, [DM_KLING] = {DM_RBOX, DM_MOTORIK},
     [DM_MOTORIK] = {DM_KLING, DM_INDIE}, [DM_INDIE] = {DM_MOTORIK, DM_SHOEGAZE}, [DM_SHOEGAZE] = {DM_INDIE, DM_SPARSE},
     [DM_FUNK] = {DM_AFRO, DM_BOOMBAP}, [DM_DISCO] = {DM_ITALO, DM_HOUSE}, [DM_BOOMBAP] = {DM_FUNK, DM_TRAP},
@@ -367,6 +398,10 @@ static const uint8_t SR_ALT[SR_N][2] = {
     [SR_LEAD] = {SR_VOXLEAD, SR_HOOVER}, [SR_VOXLEAD] = {SR_LEAD, SR_CHOIR}, [SR_CHIP] = {SR_PLUCK, SR_LEAD}, [SR_KEYS] = {SR_EP, SR_SINEKEY},
     [SR_DRONE] = {SR_PAD, SR_TEXTURE}, [SR_NOISE] = {SR_TEXTURE, SR_DRONE}, [SR_TEXTURE] = {SR_NOISE, SR_DRONE}, [SR_HOOVER] = {SR_STAB, SR_LEAD},
     [SR_WALL] = {SR_STRINGS, SR_PAD}, [SR_GTR] = {SR_PLUCK, SR_KEYS}, [SR_SINEKEY] = {SR_KEYS, SR_BELL}, [SR_EBMBASS] = {SR_ROCKBASS, SR_ACID},
+    [SR_PSYBASS] = {SR_PSYGLIDE, SR_PSYDARK}, [SR_PSYGLIDE] = {SR_PSYBASS, SR_PSYDARK}, [SR_PSYDARK] = {SR_PSYBASS, SR_PSYGLIDE},
+    [SR_PSYLEAD] = {SR_PSYLEAD, SR_PSYARP}, [SR_PSYARP] = {SR_PSYLEAD, SR_PSYARP}, [SR_PSYPAD] = {SR_PSYPAD, SR_PSYSUB},
+    [SR_PSYSUB] = {SR_PSYSUB, SR_PSYPAD}, [SR_FOREST] = {SR_NIGHT, SR_FOREST}, [SR_NIGHT] = {SR_FOREST, SR_NIGHT},
+    [SR_MANTRA] = {SR_MANTRA, SR_PSYPAD},
 };
 /* the names the song generator never picks (the cheerful, the odd), whatever the role */
 static const char *const GEN_NEVER[] = {"ARCADE", "BYTEBEAT", "GOSPEL", "ROCK DRIVE", "METAL", "BYTE VAR", "FLOAT FM",
@@ -581,6 +616,30 @@ static const ggenre_t GENRE[] = {
      {BA_AROUND, BA_DUST, BA_JUNGLE}, 33, KM_INTERLOCK, 55, {PR_I_IV, PR_JAZZ, PR_MINOR4}, 2, CS_COMP, VM_QUART,
      {AP_WALK, AP_BROKEN}, LD_MOTIF, AMT(80, 85, 60, 30, 45), {KIT_SOFT, SR_FMBASS, SR_EP, SR_KEYS, SR_VOXLEAD}, SR_TEXTURE,
      4, 4, 65, 0, FM_PARTS, 50, HF_JAZZY},
+    /* ---- (PSY) psytrance at night. Appended last: a genre is named by its place (gp.genre, the web emulator, the tests),
+     * so every number that named one before still does. Only the dark modes (no major, no lydian), a reverb that is
+     * ROOM or CLOUD (never SHIMMER), a pedal or one move in the harmony, the drums a machine's. The delay is the 1/8 in
+     * ping-pong (the dotted eighth the genre likes is not one of TIME's divisions) */
+    {"NIGHT PSY", 140, 148, 0, {SC_MIN, SC_PHRY, SC_MIN, SC_HARM}, DM_PSY, 100, KIT_PSY, 0, HC_MACHINE, FL_ROLL, 0,
+     {BA_PSY, BA_PSYROLL, BA_PSYOCT}, 31, KM_ANSWER, 45, {PR_ONE, PR_PHRY, PR_I_VII}, 4, CS_TRANCE, VM_PLANE,
+     {AP_TRANCE, AP_PEDAL}, LD_OSTINATO, AMT(100, 95, 35, 50, 70), {KIT_PSY, SR_PSYBASS, SR_PSYPAD, SR_PSYARP, SR_PSYLEAD}, SR_NIGHT,
+     0, 1, 55, 2, FM_CLUB, 20, HF_LOOP},
+    {"DARK PSY", 145, 165, 0, {SC_PHRY, SC_HARM, SC_PHRY, SC_MIN}, DM_DARKPSY, 100, KIT_PSY, 0, HC_MACHINE, FL_DROP, 0,
+     {BA_PSYGAL, BA_DKWALK, BA_PSYROLL}, 29, KM_ANSWER, 50, {PR_ONE, PR_PHRY, PR_ONE}, 4, CS_DRONE, VM_PLANE,
+     {AP_OCTAVES, AP_PEDAL}, LD_OSTINATO, AMT(100, 95, 20, 40, 60), {KIT_PSY, SR_PSYDARK, SR_PSYPAD, SR_PSYLEAD, SR_PSYLEAD}, SR_NIGHT,
+     0, 1, 50, 2, FM_CLUB, 15, HF_LOOP},
+    {"FOREST", 135, 148, 0, {SC_PHRY, SC_MIN, SC_DOR, SC_PHRY}, DM_FOREST, 100, KIT_PSY, 0, HC_MACHINE, FL_ROLL, 0,
+     {BA_PSYROLL, BA_PSYGLD, BA_PSY}, 31, KM_ANSWER, 45, {PR_ONE, PR_PHRY, PR_I_II}, 4, CS_DRONE, VM_PLANE,
+     {AP_CYCLE3, AP_PEDAL}, LD_SPARSE, AMT(95, 85, 40, 30, 45), {KIT_PSY, SR_PSYGLIDE, SR_PSYPAD, SR_PSYARP, SR_MANTRA}, SR_FOREST,
+     4, 1, 65, 2, FM_ARC, 35, HF_LOOP},
+    {"DARK FOREST", 138, 148, 0, {SC_PHRY, SC_MIN, SC_HARM, SC_PHRY}, DM_FOREST, 100, KIT_PSY, 0, HC_MACHINE, FL_ROLL, 0,
+     {BA_PSYROLL, BA_DKWALK, BA_PSYGLD}, 29, KM_ANSWER, 50, {PR_ONE, PR_PHRY, PR_I_VII}, 4, CS_DRONE, VM_PLANE,
+     {AP_CYCLE3, AP_OCTAVES}, LD_OSTINATO, AMT(95, 90, 40, 35, 55), {KIT_PSY, SR_PSYDARK, SR_PSYPAD, SR_PSYARP, SR_PSYLEAD}, SR_FOREST,
+     4, 1, 60, 2, FM_ARC, 30, HF_LOOP},
+    {"AMBIENT PSY", 60, 110, 0, {SC_PHRY, SC_MIN, SC_DOR, SC_MPEN}, DM_SPARSE, 25, KIT_SOFT, 0, HC_FLAT, FL_NONE, 0,
+     {BA_PEDAL, BA_FIFTHS, BA_NEOARP}, 29, KM_SUSTAIN, 120, {PR_ONE, PR_SUS, PR_PHRY}, 4, CS_SWELL, VM_PLANE,
+     {AP_GLASS, AP_PEDAL}, LD_SPARSE, AMT(0, 45, 100, 45, 30), {KIT_SOFT, SR_PSYSUB, SR_PSYPAD, SR_PSYARP, SR_MANTRA}, SR_FOREST,
+     4, 0, 90, 2, FM_ARC, 80, HF_COLOR},
 };
 #define NGENRE (sizeof GENRE / sizeof GENRE[0])
 
