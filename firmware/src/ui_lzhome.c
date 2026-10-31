@@ -243,7 +243,7 @@ static uint32_t routes_count(void)                      /* the MOD slots whose S
  * the theme's colour; a mutation landed, white). (0.8.9) Drawn into the canvas as the water's x0, y0 .. (eco_draw); SKIN HUD's HOME: the
  * water is the screen, every strip draws the part of it under it (eco_backdrop; a being off the strip skipped), the
  * numbers and the MACROS words in the middle strip only (words), clear of the floating ones */
-static void eco_draw(int32_t x0, int32_t y0, int words)
+static void __attribute__((unused)) eco_draw_beings(int32_t x0, int32_t y0, int words)
 {
     uint32_t c, k, still = (ui_prefs & PREF_ANIM_OFF) != 0u;
     int32_t bx[ECO_N], by[ECO_N], bot = eco_bot(), hud = hud_home();
@@ -282,8 +282,8 @@ static void eco_draw(int32_t x0, int32_t y0, int words)
     }
     cv_oy = 0;
 }
-static void __attribute__((unused)) graph_eco(void) { eco_draw(0, 0, 1); }
-static void eco_backdrop(int32_t x0, int32_t y0, int words) { eco_draw(x0, y0, words); }
+static void psy_draw(int32_t x0, int32_t y0, int words);
+static void eco_backdrop(int32_t x0, int32_t y0, int words) { psy_draw(x0, y0, words); }   /* (PSY: the mandala) */
 /* BEING: the track's being large, its HOME knobs as organs at the corners */
 static const int16_t ORG_X[4] = {30, 210, 30, 210}, ORG_Y[4] = {28, 28, 116, 116};
 static void organ(uint32_t k, int32_t cx, int32_t cy)
@@ -387,13 +387,16 @@ static void psy_petal(int32_t cx, int32_t cy, uint32_t ang, int32_t len, int32_t
         }
     }
 }
-static void graph_psy(void)
+/* drawn into the canvas as the screen's x0, y0 .. (as eco_draw: SKIN HUD's strips each draw the part under them; words:
+ * the numbers and the name, in the middle strip only) */
+static void psy_draw(int32_t x0, int32_t y0, int words)
 {
     uint32_t c, still = (ui_prefs & PREF_ANIM_OFF) != 0u;
-    int32_t cx = 120, cy = (int32_t)graph_h() / 2, R = cy - 8, tot = 0, k, i;
+    int32_t cx = 120 - x0, cy = eco_h() / 2, R = (cy < 120 ? cy : 120) - 8, tot = 0, k, i;
     uint32_t rot = still ? 0u : (uint32_t)ui.frame * 28u;
     (void)eco_step();                                   /* (the levels, once a frame) */
     (void)bg_energy();
+    cv_oy = -y0;
     for (c = 0; c < ECO_N; c++)
         tot += eco.en[c];
     tot /= ECO_N;
@@ -414,11 +417,15 @@ static void graph_psy(void)
         char num[2] = {(char)('1' + c), 0};
         psy_petal(cx * 16, cy * 16, ang, len * 16, wid * 16, col);
         psy_petal(cx * 16, cy * 16, ang, len * 10, wid * 10, c == song.sel ? T_TEXT : ux_mix(T_SURF, col, 65));
-        cv_text_in(tx - 30, ty - 6, 60, &AF_S, num, c == song.sel ? T_TEXT : off ? T_DIM : T_MID, T_SURF);
+        if (words)
+            cv_text_in(tx - 30, ty - 6, 60, &AF_S, num, c == song.sel ? T_TEXT : off ? T_DIM : T_MID, T_SURF);
     }
     cv_rect(cx - 2, cy - 2, 5, 5, ux_mix(T_THEME, T_ACCENT, tot * 100 / 256));   /* the seed */
-    cv_text(6, 2, &AF_X, "PSY", T_DIM);
+    if (words)
+        cv_text(6 - x0, (hud_home() ? (int32_t)graph_y() : 0) + 3, &AF_X, "PSY", T_DIM);
+    cv_oy = 0;
 }
+static void graph_psy(void) { psy_draw(0, 0, 1); }
 static void graph_home_lz(void)
 {
     if (home_level() == 1u)
