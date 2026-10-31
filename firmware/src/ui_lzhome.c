@@ -282,7 +282,7 @@ static void eco_draw(int32_t x0, int32_t y0, int words)
     }
     cv_oy = 0;
 }
-static void graph_eco(void) { eco_draw(0, 0, 1); }
+static void __attribute__((unused)) graph_eco(void) { eco_draw(0, 0, 1); }
 static void eco_backdrop(int32_t x0, int32_t y0, int words) { eco_draw(x0, y0, words); }
 /* BEING: the track's being large, its HOME knobs as organs at the corners */
 static const int16_t ORG_X[4] = {30, 210, 30, 210}, ORG_Y[4] = {28, 28, 116, 116};
@@ -369,10 +369,60 @@ static void graph_home_being(void)
     GFX_HOOK_ALIGN(60, 0, 180, 0, AL_H, "BEING sound name centred");
     cv_text_in(60, 129, 120, &AF_X, b[0] ? b : trk_engp(&trk[c])->name, T_MID, T_SURF);
 }
+/* (PSY) HOME: the night's flower. The six tracks are the six petals of one mandala, turning slowly; a petal opens with
+ * its track's sound (the level eco_step already slews), glows from the theme's colour to the accent's on a hit, and
+ * folds dark when the track is muted. The inner petal of the selected track is white. Three rings of dots breathe with
+ * the whole mix, a centre seed beats with it. Nothing here touches the audio: the levels the UI already reads. */
+static void psy_petal(int32_t cx, int32_t cy, uint32_t ang, int32_t len, int32_t wid, uint16_t c)   /* (Q4: centre, length, half-width) */
+{
+    int32_t dx = og_cos(ang), dy = og_sin(ang), i, side;
+    for (side = -1; side <= 1; side += 2) {
+        int32_t px = cx, py = cy;
+        for (i = 1; i <= 6; i++) {
+            int32_t s = len * i / 6, w = side * ((wid * og_sin((uint32_t)(i * 0x8000 / 6))) >> 15);
+            int32_t x = cx + ((dx * s) >> 15) - ((dy * w) >> 15), y = cy + ((dy * s) >> 15) + ((dx * w) >> 15);
+            og_line(px, py, x, y, c);
+            px = x;
+            py = y;
+        }
+    }
+}
+static void graph_psy(void)
+{
+    uint32_t c, still = (ui_prefs & PREF_ANIM_OFF) != 0u;
+    int32_t cx = 120, cy = (int32_t)graph_h() / 2, R = cy - 8, tot = 0, k, i;
+    uint32_t rot = still ? 0u : (uint32_t)ui.frame * 28u;
+    (void)eco_step();                                   /* (the levels, once a frame) */
+    (void)bg_energy();
+    for (c = 0; c < ECO_N; c++)
+        tot += eco.en[c];
+    tot /= ECO_N;
+    for (k = 0; k < 3; k++) {                           /* the rings: dots turning against the petals, breathing with the mix */
+        int32_t rr = R * (3 + k * 2) / 10 + tot * (k + 1) / 128, n = 12 + k * 6;
+        for (i = 0; i < n; i++) {
+            uint32_t a = (uint32_t)(i * 65536 / n) + (k & 1 ? rot : 0u - rot) / 2u;
+            cv_rect(cx + ((og_cos(a & 0xFFFFu) * rr) >> 15), cy + ((og_sin(a & 0xFFFFu) * rr) >> 15), 1 + (k == 0), 1 + (k == 0),
+                    ux_mix(T_SURF, T_THEME, 30 + k * 12 + tot * 20 / 256));
+        }
+    }
+    for (c = 0; c < ECO_N; c++) {                       /* the petals */
+        uint32_t ang = (rot + c * 65536u / ECO_N) & 0xFFFFu;
+        int32_t en = eco.en[c] > 256 ? 256 : eco.en[c], off = eco_off(c);
+        int32_t len = off ? R * 28 / 100 : R * (36 + en * 64 / 256) / 100, wid = len * 36 / 100;
+        uint16_t col = off ? T_DIM : ux_mix(T_THEME, mut_flash[c] ? T_TEXT : T_ACCENT, en * 100 / 256);
+        int32_t tx = cx + ((og_cos(ang) * (len + 9)) >> 15), ty = cy + ((og_sin(ang) * (len + 9)) >> 15);
+        char num[2] = {(char)('1' + c), 0};
+        psy_petal(cx * 16, cy * 16, ang, len * 16, wid * 16, col);
+        psy_petal(cx * 16, cy * 16, ang, len * 10, wid * 10, c == song.sel ? T_TEXT : ux_mix(T_SURF, col, 65));
+        cv_text_in(tx - 30, ty - 6, 60, &AF_S, num, c == song.sel ? T_TEXT : off ? T_DIM : T_MID, T_SURF);
+    }
+    cv_rect(cx - 2, cy - 2, 5, 5, ux_mix(T_THEME, T_ACCENT, tot * 100 / 256));   /* the seed */
+    cv_text(6, 2, &AF_X, "PSY", T_DIM);
+}
 static void graph_home_lz(void)
 {
     if (home_level() == 1u)
         graph_home_being();
     else
-        graph_eco();
+        graph_psy();
 }
