@@ -398,13 +398,13 @@ static void psy_draw(int32_t x0, int32_t y0, int words)
         uint32_t ang = (rot + c * 65536u / ECO_N) & 0xFFFFu;
         int32_t en = eco.en[c] > 256 ? 256 : eco.en[c], off = eco_off(c);
         int32_t len = off ? R * 28 / 100 : R * (36 + en * 64 / 256) / 100, wid = len * 36 / 100;
-        uint16_t col = off ? T_DIM : ux_mix(T_THEME, mut_flash[c] ? T_TEXT : T_ACCENT, en * 100 / 256);
+        uint16_t col = mut_flash[c] ? T_TEXT : off ? T_DIM : ux_mix(T_THEME, T_ACCENT, en * 100 / 256);   /* (a mutation landed: white) */
         int32_t tx = cx + ((og_cos(ang) * (len + 9)) >> 15), ty = cy + ((og_sin(ang) * (len + 9)) >> 15);
         char num[2] = {(char)('1' + c), 0};
         psy_petal(cx * 16, cy * 16, ang, len * 16, wid * 16, col);
         psy_petal(cx * 16, cy * 16, ang, len * 10, wid * 10, c == song.sel ? T_TEXT : ux_mix(T_SURF, col, 65));
         if (words)
-            cv_text_in(tx - 30, ty - 6, 60, &AF_S, num, c == song.sel ? T_TEXT : off ? T_DIM : T_MID, T_SURF);
+            cv_text_in(tx - 30, ty - 6, 60, &AF_S, num, c == song.sel || mut_flash[c] ? T_TEXT : off ? T_DIM : T_MID, T_SURF);
     }
     cv_rect(cx - 2, cy - 2, 5, 5, ux_mix(T_THEME, T_ACCENT, tot * 100 / 256));   /* the seed */
     if (words)

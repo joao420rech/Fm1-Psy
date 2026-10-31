@@ -2377,11 +2377,13 @@ static int test_display_preferences(void)
                  settings.palette == 6 && T_BG == UI_PALETTES[6].bg && ux.light && ui.menu == 1 && !song.octave &&
                  memcmp(before, host_screen, sizeof before) && !memcmp(sounds, trk, sizeof sounds));
     turn(EN_K1, 1);
-    bad += check("COLOR KNOB 1 steps on to HI-CON, NIGHT (#50: true black), MONO (1.0.2: black and white), JIANT, then wraps to GREY",
+    bad += check("COLOR KNOB 1 steps on to HI-CON, NIGHT (#50: true black), MONO (1.0.2: black and white), PSY, UV, BIOLUM, then wraps to GREY",
                  settings.palette == 7 && (turn(EN_K1, 1), settings.palette == 8u) && T_BG == 0u &&
                  str_eq(UI_PALETTES[8].name, "NIGHT") && (turn(EN_K1, 1), settings.palette == UI_BW_INDEX) &&
                  str_eq(UI_PALETTES[UI_BW_INDEX].name, "MONO") && T_BG == 0u && T_TEXT == 0xFFFFu &&
                  (turn(EN_K1, 1), settings.palette == UI_JIANT_INDEX) && str_eq(UI_PALETTES[UI_JIANT_INDEX].name, "PSY") &&
+                 (turn(EN_K1, 1), str_eq(UI_PALETTES[settings.palette].name, "UV")) &&
+                 (turn(EN_K1, 1), str_eq(UI_PALETTES[settings.palette].name, "BIOLUM")) &&
                  (turn(EN_K1, 1), settings.palette == UI_GREY_INDEX) && str_eq(UI_PALETTES[UI_GREY_INDEX].name, "GREY"));
     settings.lowcut = 2;
     ui.menu_sel = MI_LOWCUT;
@@ -10440,8 +10442,7 @@ static int test_home_a(void)
         ha_eco_at(5000);
         ok &= memcmp(a, host_screen, sizeof a) != 0;
         mut_flash[0] = 0;
-        if (sk == SKIN_COLORS)
-            ok &= ha_loose() <= 22u * 4u;                         /* (away from the beings the granules only: 22, 4 px at most) */
+        (void)ha_loose;                                     /* (PSY: the mandala's rings, no granules to count) */                         /* (away from the beings the granules only: 22, 4 px at most) */
         bad += check(sk == SKIN_COLORS ? "0.9.7 HOME A (COLORS): no critters, no MUTATE ring until a mutation lands" :
                      sk == SKIN_BOTTOM_OLD ? "0.9.7 HOME A (BOTTOM, read as AIR): no MUTATE ring until a mutation lands" :
                      sk == SKIN_HUD ? "0.9.7 HOME A (HUD): no MUTATE ring until a mutation lands" :
@@ -11001,12 +11002,12 @@ static int test_lz_home(void)
     uint32_t c, k;
     ui_power_on(); frame();
     ok = ui.home && lz_on() && lz_fam() == LZ_HOME && home_level() == 0u && !home_set() && lz_tab_lit(0) && lz_tabs() == 3u &&
-         lz_crumb_is("HOME \xB7 ECO \xB7 ECO") && lz_count_is("1/7");
+         lz_crumb_is("HOME \xB7 BLOOM \xB7 BLOOM") && lz_count_is("1/7");
     press(B_HOME); frame();                                         /* a HOME tap: BEING (the next group) */
-    ok &= ui.home && home_level() == 1u && !home_set() && lz_tab_lit(1) && lz_crumb_is("HOME \xB7 BEING \xB7 BEING") &&
+    ok &= ui.home && home_level() == 1u && !home_set() && lz_tab_lit(1) && lz_crumb_is("HOME \xB7 SOUL \xB7 SOUL") &&
           lz_count_is("3/7");
     turn(EN_SELECT, -1); frame();                                   /* SELECT left: MACROS */
-    ok &= home_level() == 0u && home_set() && home_macros() && lz_crumb_is("HOME \xB7 ECO \xB7 MACROS") && lz_count_is("2/7");
+    ok &= home_level() == 0u && home_set() && home_macros() && lz_crumb_is("HOME \xB7 BLOOM \xB7 MACROS") && lz_count_is("2/7");
     k = macro_v[0];
     turn(EN_K1, 3); frame();
     ok &= macro_v[0] == (uint8_t)(k + 3u) && !strncmp(ui.col[0], "M1|", 3);
@@ -11019,7 +11020,7 @@ static int test_lz_home(void)
     ok &= home_level() == 0u && !home_set() && ui.home && !ui.confirm;
     bad += check("0.9.2 HOME: ECO MACROS BEING .. one chain by SELECT (no wrap), a HOME tap the next group; tabs, crumb, n/7", ok);
     turn(EN_SELECT, 3); frame();                                    /* ROUTES */
-    ok = home_level() == 1u && home_set() && home_macros() && lz_crumb_is("HOME \xB7 BEING \xB7 ROUTES") && lz_count_is("4/7");
+    ok = home_level() == 1u && home_set() && home_macros() && lz_crumb_is("HOME \xB7 SOUL \xB7 ROUTES") && lz_count_is("4/7");
     fm1_ms += 1000u;
     turn(EN_SELECT, 1); frame();                                    /* GEN 1 */
     ok &= gen_on() && gen_page() == 0u && home_level() == 2u && lz_on() && lz_tab_lit(2) && lz_crumb_is("HOME \xB7 GEN \xB7 GEN 1") &&
@@ -11605,6 +11606,7 @@ static void vxt_snap(void) { memcpy(vxt_a, host_screen + LZ_GRAPH_Y * 240, sizeo
 static void vxt_case(uint32_t e, const char *pre, const char *page, uint32_t k, int *mv, int *st)
 {
     uint32_t i, j;
+    int soul = e != ENGI_DRUM && !(page && page[0] == 'O' && page[1] == 'P');   /* (PSY: the soul; DRUM-X and FM6's OPERATOR pages their own) */
     ui_power_on();
     song.master_q12 = 4096;
     for (i = 1; i < NTRK; i++) trk[i].p[P_MUTE] = 1;
@@ -11625,10 +11627,10 @@ static void vxt_case(uint32_t e, const char *pre, const char *page, uint32_t k, 
     if (page) go_title(page); else { ui.home = 1; ui.hlv = 1; ui.hset[1] = 0; }
     transport_req = 1;
     vxt_run(1500, 1);
-    j = vxs.fr[k];
+    j = !soul ? vxs.fr[k] : psys.fr;          /* (PSY: every synth draws the soul, psy_soul; DRUM-X its kit) */
     vxt_snap();
     vxt_run(160, 1);
-    *mv = !vxt_same() && vxs.fr[k] != j;
+    *mv = !vxt_same() && (!soul ? vxs.fr[k] : psys.fr) != j;
     seq_stop();
     song.playing = 0;
     trk_all_off(TSEL);
@@ -11637,9 +11639,9 @@ static void vxt_case(uint32_t e, const char *pre, const char *page, uint32_t k, 
     memset(scope_buf, 0, sizeof scope_buf);
     vxt_run(600, 1);
     vxt_snap();
-    j = vxs.tm[k];
+    j = !soul ? vxs.tm[k] : psys.tm;
     vxt_run(600, 1);
-    *st = page ? vxt_same() : vxs.tm[k] == j && !vxs.en[k];   /* (HOME: its beings swim on; the creature holds) */
+    *st = page ? vxt_same() : !soul ? vxs.tm[k] == j && !vxs.en[k] : psys.tm == j && !psys.en;   /* (HOME: its beings swim on; the creature holds) */
 }
 static int test_engvis(void)
 {
@@ -11665,8 +11667,9 @@ static int test_engvis(void)
         if (!mv || !st) printf("  %s: %s\n", C[c].what, !mv ? "still while it plays" : "moving in silence");
         ok &= mv && st;
     }
-    bad += check("0.9.4 / 0.9.6 the engines' creatures (VOICE ANIMAL DRUM-X ANALOG FM6 WHEEL NOISE PHASE LOFI; EDIT, FM6's OPERATOR "
+    bad += check("(PSY) the sound's soul (every synth) and DRUM-X's kit (EDIT, FM6's OPERATOR "
                  "pages, HOME): move with the sound, still in silence", ok);
+#if 0   /* (PSY) JIANT's own creatures (VOICE's tract, ANIMAL, LOFI): off the screen since psy_soul; their code kept */
     {   /* (0.9.9) VOICE's tract (SCOPE OFF, the whole panel; WORDS on): an open vowel opens the jaw down (the chin
          * drops; the condyle glides forward), the lips apart; a nasal drops the velum and the branch to the nose opens (its ink over the
          * palate, where an open vowel leaves none); the pulses travel and the waves leave while it sings */
@@ -11775,6 +11778,7 @@ static int test_engvis(void)
         }
         bad += check("0.9.10 LOFI: TYPE RES DIST BEND CUT VAR LOOP ALGO COMB DUTY VIB MASK MORPH each change the drawing, still in silence", knobs);
     }
+#endif
     {   /* DRUM-X: KIT's beings (EDIT 1) and SOUND 1..4; KIT 2, KIT 3, X-MOD keep the colony; a hit squashes its being, a
          * ratchet's hits each */
         static const char *const PG[] = {"EDIT 1", "SOUND", "SOUND 4", "EDIT 2", "KIT 3", "X-MOD"};

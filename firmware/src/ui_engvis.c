@@ -2106,19 +2106,25 @@ static int32_t vx_fit(int32_t w, int32_t h, int32_t uw, int32_t uh)   /* a unit'
  * they are (ui_being.c bg_feat): WAVE how many (the lobes, twice), CUT how far they reach, RES how they ripple; DETUNE
  * splits the seed into orbiting seeds, NOISE scatters spores. All of it opens and glows with the level (heat_col's
  * bioluminescence) and turns with the sound's own time: in silence it closes and rests */
+static struct { uint32_t fr, tm; int32_t en; } psys;   /* (the tests: drawn how often, its time, its level) */
 static void psy_soul(const track_t *t, const int32_t *A, int32_t en_home)
 {
-    static uint32_t tm;
+    uint32_t tm;
     uint32_t e = trk_eng(t), v, i, n, w = scope_w;
     uint8_t ids[4];
     bfeat_t f;
     int32_t cx = A[0] * 16 + A[2] * 8, cy = A[1] * 16 + A[3] * 8, R = (A[2] < A[3] ? A[2] : A[3]) * 7;   /* (Q4: 7/8 of half) */
     int32_t en = en_home >= 0 ? en_home : bg_energy(), px = 0, py = 0, len, wid, rp = R / 16;
+    if (en < 8)                                          /* (the slewed level's last crumbs: silence) */
+        en = 0;
     for (v = 0; v < 4u; v++)
         ids[v] = (uint8_t)ENGINES[e]->knob[v];
     bg_feat(t, &GENOME[EGEN[e]], ids, &f);
     if (!(ui_prefs & PREF_ANIM_OFF))
-        tm += 30u + (uint32_t)en * 4u;
+        psys.tm += (uint32_t)en * 4u;                    /* (its time runs with the sound: in silence it rests) */
+    tm = psys.tm;
+    psys.en = en;
+    psys.fr++;
     for (i = 0; i <= 64u; i++) {                         /* the rim: the sound, round */
         uint32_t a = (i * 1024u + tm / 6u) & 0xFFFFu;
         int32_t sm = scope_buf[(w - 1u - (i & 63u) * 4u) & (SCOPE_N - 1u)];
