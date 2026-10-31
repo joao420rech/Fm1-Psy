@@ -1,9 +1,6 @@
 name: Private ADDITIVE installer and emulator
 on:
-  push:
-    branches: [main]
-    paths: [web/PRIVATE_BUILD.json]
-  workflow_dispatch:
+  workflow_dispatch:   # (PSY fork: the JIANT site's deploy, by hand only; psy-emulator.yml publishes this fork)
 permissions:
   contents: read
   actions: read

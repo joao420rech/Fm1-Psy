@@ -43,10 +43,25 @@ jobs:
           # (the PSY page: web/emu/index.html, with the version filled in)
           VERSION=$(sed -n 's/^#define FELUCCA_VERSION "\([^"]*\)".*/\1/p' firmware/src/felucca.c)
           sed -e "s/@VERSION@/$VERSION/g" -e "s/@PREVIEW@//g" web/emu/index.html > build/emu/index.html
+      - name: the screens (tests/ui_render.c, every screen in every palette) and the UI test
+        continue-on-error: true
+        run: |
+          FV=$(sed -n 's/^#define FELUCCA_VERSION "\([^"]*\)".*/\1/p' firmware/src/felucca.c)
+          mkdir -p build/host build/ui_new/ppm build/ui_slot
+          cc -O1 -w "-DFELUCCA_VERSION=\"$FV\"" -Ibuild/gen -Ifirmware/src -Itests -o build/host/ui_render tests/ui_render.c -lm
+          build/host/ui_render build/ui_new build/ui_slot > build/ui_new/run.txt 2>&1 || echo "ui_render exit $?" >> build/ui_new/run.txt
+          python3 tests/ui_render.py build/ui_new build/ui_slot >> build/ui_new/run.txt 2>&1 || true
+          cc -O1 -w -Ibuild/gen -Ifirmware/src -o build/host/ui_test tests/ui_test.c -lm && (build/host/ui_test > build/ui_new/ui_test.txt 2>&1; echo "exit $?" >> build/ui_new/ui_test.txt) || echo "ui_test did not build" > build/ui_new/ui_test.txt
       - name: the site
         run: |
           mkdir -p build/pages
           cp -r build/emu/. build/pages/
+          if [ -d build/ui_new ]; then
+            mkdir -p build/pages/shots
+            cp build/ui_new/*.png build/ui_new/*.txt build/pages/shots/ 2>/dev/null || true
+            for d in build/ui_new/*/; do n=$(basename "$d"); [ "$n" = ppm ] || cp -r "$d" build/pages/shots/; done
+            (cd build/pages/shots && find . -name '*.png' | sort > index.txt)
+          fi
           touch build/pages/.nojekyll
       - uses: actions/upload-pages-artifact@v3
         with:
