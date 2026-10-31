@@ -50,7 +50,7 @@ int main(int argc, char **argv)
     double worst = 100;
     assert(NPALETTES == 11u && !strcmp(UI_PALETTES[0].name, "GREY") && !strcmp(UI_PALETTES[7].name, "HI-CON") &&
            !strcmp(UI_PALETTES[8].name, "NIGHT") && !strcmp(UI_PALETTES[9].name, "MONO") && UI_BW_INDEX == 9u &&
-           !strcmp(UI_PALETTES[10].name, "JIANT") && UI_JIANT_INDEX == 10u);   /* (JIANT 0.1: appended) */
+           !strcmp(UI_PALETTES[10].name, "PSY") && UI_JIANT_INDEX == 10u);   /* (JIANT 0.1: appended) */
     /* (#50, 1.0.2: appended, the ids stay; GREY is the MONO of 1.0.1, id 0) */
     for (unsigned st = ST_FLAT; st <= ST_LINE; st++) {   /* MONO: every token black or white, in FLAT and LINE */
         uint16_t *tok = &ux.bg;

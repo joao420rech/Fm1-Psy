@@ -53,8 +53,12 @@ PALETTES = [
     # JIANT FM (docs/TONIC-UI.md): a thermal camera. Black, white details, violet for what is selected, orange for the
     # one active thing; every value, curve and hit as heat (ui_graph.c heat_col: cyan blue violet red orange yellow
     # white). The default since JIANT 0.1 (src/panel.c); 0.5: violet selection (was cyan), the heat everywhere
-    ("JIANT",  (0, 0, 0),       (10, 9, 14),     (244, 241, 234), (184, 112, 255), (255, 122, 0)),   # (0.6.60: SURF black, no boxes;
+    ("PSY",    (0, 0, 0),       (12, 6, 22),     (236, 226, 255), (200, 140, 255), (125, 255, 107)),   # (PSY: the night's look on the JIANT
+    # skin: black, lavender text, UV violet for what is selected, toxic green for the one active thing; the heat graphs stay)
     # 0.8.9, the skins' mock-up: the 0.6 colours, a near-black panel and near-black cards: RAISE_OF below)
+    # (PSY) appended: UV (blacklight: ultraviolet blue and magenta) and BIOLUM (a forest's bioluminescence)
+    ("UV",     (4, 2, 16),      (14, 10, 44),    (220, 226, 255), (132, 150, 255), (255, 61, 240)),
+    ("BIOLUM", (0, 6, 8),       (4, 24, 28),     (200, 248, 236), (40, 240, 200),  (255, 170, 40)),
 ]
 # (0.8.9) MENU > DISPLAY > SKIN (the approved mock-up opciones_skin.html, "0.6 COLORS"): each knob its colour, as the 0.6
 # firmware had them, on its card's value and gauge (and the EDIT chips, the knob row of BOTTOM and HUD): KNOB 1..4. The
@@ -70,10 +74,12 @@ KNOBS = {
     "HI-CON": [(255, 232, 0), (0, 230, 255), (255, 255, 255), (255, 130, 130)],
     "NIGHT":  [(56, 220, 100), (200, 255, 120), (120, 240, 210), (150, 230, 170)],
     "MONO":   [(255, 255, 255)] * 4,
-    "JIANT":  [(138, 108, 255), (255, 210, 60), (88, 116, 255), (255, 75, 75)],
+    "PSY":    [(182, 107, 255), (255, 61, 240), (125, 255, 107), (80, 200, 255)],
+    "UV":     [(104, 124, 255), (255, 61, 240), (90, 230, 255), (190, 120, 255)],
+    "BIOLUM": [(40, 240, 200), (255, 170, 40), (120, 220, 255), (190, 255, 120)],
 }
 # RAISE = mix(SURF, TEXT, RAISE_PCT); JIANT (0.8.9): the mock-up's near-black card (#131218) on its panel, 4 %
-RAISE_OF = {"JIANT": 4}
+RAISE_OF = {"PSY": 4}
 BW = "MONO"
 BW_GREY = (82, 82, 82)             # MONO's one mid grey (RGB565 10/20/10): DIM LINE RAISE LANE
 # the 20 palettes of the earlier firmware (index order) -> the new palette
@@ -218,7 +224,7 @@ def main():
         out += ["};", "static const uint8_t UI_RAISE_OF[] = {" + ", ".join(str(RAISE_OF.get(p[0], RAISE_PCT)) for p in PALETTES) + "};",
                 f"#define UI_NPALETTES {len(PALETTES)}u", "#define UI_GREY_INDEX 0u",
                 f"#define UI_BW_INDEX {names.index(BW)}u          /* MONO: black and white (src/gfx.c palette_set) */",
-                f"#define UI_JIANT_INDEX {names.index('JIANT')}u          /* JIANT FM: the default (src/panel.c) */",
+                f"#define UI_JIANT_INDEX {names.index('PSY')}u          /* PSY: the default (src/panel.c); the JIANT skin's look */",
                 f"#define UI_BW_GREY 0x{to565(BW_GREY):04x}u          /* MONO's one grey: DIM LINE RAISE LANE */",
                 f"#define UI_PAL_TAG {PAL_TAG}u          /* stored id = UI_PAL_TAG + index; below 20: an old id */"]
         out += [f"#define UI_{k}_PCT {v}" for k, v in PCT.items()] + [f"#define UI_RAISE_PCT {RAISE_PCT}   /* SURF -> TEXT */"]
