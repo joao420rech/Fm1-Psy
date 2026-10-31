@@ -33,8 +33,6 @@ jobs:
           version: 6.0.11
       - name: the emulator
         run: |
-          # (the current edition is ADDITIVE: its page and the API it asks of the wasm, as emulator.yml does)
-          cat web/emu/additive-api.h >> web/emu/felucca_web.c
           if ! sh web/emu/build.sh > /tmp/emu.log 2>&1; then
             # (the log is private to a signed-in viewer: the first lines of it as annotations anyone can read)
             grep -n -E "error|Error|undefined|not found|fatal" /tmp/emu.log | head -8 | while IFS= read -r l; do echo "::error::$(printf '%s' "$l" | cut -c1-400)"; done
@@ -42,6 +40,7 @@ jobs:
             exit 1
           fi
           tail -n 2 /tmp/emu.log
+          # (the current edition's page)
           VERSION=$(sed -n 's/^#define FELUCCA_VERSION "\([^"]*\)".*/\1/p' firmware/src/felucca.c)
           sed -e "s/@VERSION@/$VERSION/g" -e "s/@PREVIEW@//g" web/emu/index-additive.html > build/emu/index.html
       - name: the site
