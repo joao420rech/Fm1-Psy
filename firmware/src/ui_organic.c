@@ -348,3 +348,19 @@ static void og_ill(const uint8_t *b, uint32_t len, int32_t cx, int32_t cy, int32
         }
     }
 }
+/* (PSY) a petal: a lens from the centre (cx, cy) out along ang, length len, half-width wid (Q4), outlined in six
+ * segments a side (the HOME mandala, the splash, the sound's soul) */
+static void psy_petal(int32_t cx, int32_t cy, uint32_t ang, int32_t len, int32_t wid, uint16_t c)   /* (Q4: centre, length, half-width) */
+{
+    int32_t dx = og_cos(ang), dy = og_sin(ang), i, side;
+    for (side = -1; side <= 1; side += 2) {
+        int32_t px = cx, py = cy;
+        for (i = 1; i <= 6; i++) {
+            int32_t s = len * i / 6, w = side * ((wid * og_sin((uint32_t)(i * 0x8000 / 6))) >> 15);
+            int32_t x = cx + ((dx * s) >> 15) - ((dy * w) >> 15), y = cy + ((dy * s) >> 15) + ((dx * w) >> 15);
+            og_line(px, py, x, y, c);
+            px = x;
+            py = y;
+        }
+    }
+}

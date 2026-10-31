@@ -107,8 +107,7 @@ static struct {
 
 /* DRUM-X's beings in the thermal ramp of the mock-up the kit was chosen from (cyan blue violet red orange yellow white:
  * the 0.6's, the JIANT palette); every other palette as the beings (bg_col) */
-static const uint8_t VK_HP[8] = {0, 26, 51, 82, 118, 154, 200, 255};
-static const uint16_t VK_HC[8] = {0x13D4u, 0x2DFCu, 0x4B5Fu, 0x8B7Fu, 0xFA49u, 0xFC43u, 0xFE87u, 0xFFFFu};
+/* (PSY) one light for every creature: the beings' bioluminescence (bg_col: heat_col), the kit's own ramp retired */
 static uint16_t vx_col(int32_t h)
 {
     uint32_t k = 0;
@@ -116,21 +115,13 @@ static uint16_t vx_col(int32_t h)
         return T_THEME;
     if (h < 0)                                           /* (a muted sound: dim, as the colony's) */
         return ux.mono || settings.palette == UI_BW_INDEX ? ux_gray(ux_luma(T_DIM) >> 3) : T_DIM;
-    h = clamp(h, 0, 255);
-    if (!vxs.kc || settings.palette != UI_JIANT_INDEX)
-        return bg_col(h);
-    while (k < 6u && h > VK_HP[k + 1u]) k++;
-    return ux_mix(VK_HC[k], VK_HC[k + 1u], (h - VK_HP[k]) * 100 / (VK_HP[k + 1u] - VK_HP[k]));
+    (void)k;
+    return bg_col(clamp(h, 0, 255));
 }
 /* (0.9.7) HOME's beings (ui_lzhome.c, variant A): the same ramp on JIANT, every other palette as the beings (bg_col) */
 static uint16_t vk_heat(int32_t h)
 {
-    uint32_t k = 0;
-    h = clamp(h, 0, 255);
-    if (settings.palette != UI_JIANT_INDEX)
-        return bg_col(h);
-    while (k < 6u && h > VK_HP[k + 1u]) k++;
-    return ux_mix(VK_HC[k], VK_HC[k + 1u], (h - VK_HP[k]) * 100 / (VK_HP[k + 1u] - VK_HP[k]));
+    return bg_col(clamp(h, 0, 255));
 }
 static void vx_line(const vxf_t *f, int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t h)
 {
@@ -2110,32 +2101,67 @@ static int32_t vx_fit(int32_t w, int32_t h, int32_t uw, int32_t uh)   /* a unit'
 {
     return w * 256 / uw < h * 256 / uh ? w * 256 / uw : h * 256 / uh;
 }
+/* (PSY) the sound's soul, every synth engine's (the creatures above stay for DRUM-X's kit only): a flower drawn from
+ * the sound. Its rim is the sound itself, the scope wrapped round a circle; its petals are the HOME knobs read by what
+ * they are (ui_being.c bg_feat): WAVE how many (the lobes, twice), CUT how far they reach, RES how they ripple; DETUNE
+ * splits the seed into orbiting seeds, NOISE scatters spores. All of it opens and glows with the level (heat_col's
+ * bioluminescence) and turns with the sound's own time: in silence it closes and rests */
+static void psy_soul(const track_t *t, const int32_t *A, int32_t en_home)
+{
+    static uint32_t tm;
+    uint32_t e = trk_eng(t), v, i, n, w = scope_w;
+    uint8_t ids[4];
+    bfeat_t f;
+    int32_t cx = A[0] * 16 + A[2] * 8, cy = A[1] * 16 + A[3] * 8, R = (A[2] < A[3] ? A[2] : A[3]) * 7;   /* (Q4: 7/8 of half) */
+    int32_t en = en_home >= 0 ? en_home : bg_energy(), px = 0, py = 0, len, wid, rp = R / 16;
+    for (v = 0; v < 4u; v++)
+        ids[v] = (uint8_t)ENGINES[e]->knob[v];
+    bg_feat(t, &GENOME[EGEN[e]], ids, &f);
+    if (!(ui_prefs & PREF_ANIM_OFF))
+        tm += 30u + (uint32_t)en * 4u;
+    for (i = 0; i <= 64u; i++) {                         /* the rim: the sound, round */
+        uint32_t a = (i * 1024u + tm / 6u) & 0xFFFFu;
+        int32_t sm = scope_buf[(w - 1u - (i & 63u) * 4u) & (SCOPE_N - 1u)];
+        int32_t r = R * 84 / 100 + clamp(sm, -12000, 12000) * (rp * 3) / 12000;
+        int32_t x = cx + ((og_cos(a) * r) >> 15), y = cy + ((og_sin(a) * r) >> 15);
+        if (i)
+            og_line(px, py, x, y, bg_col(70 + en * 150 / 256));
+        px = x;
+        py = y;
+    }
+    n = 2u * (uint32_t)clamp(f.lob, 2, 7);              /* the petals */
+    len = R * (34 + clamp(f.len, 0, 420) * 30 / 420 + en * 20 / 256) / 100;
+    wid = len * (26 + f.ripple * 18 / 256) / 100;
+    for (i = 0; i < n; i++) {
+        uint32_t a = (i * 65536u / n + tm / 10u) & 0xFFFFu;
+        int32_t l = len + ((bg_sin(tm * 3u + i * 9000u) * (f.ripple * len / 900)) >> 15);
+        psy_petal(cx, cy, a, l, wid, bg_col(100 + en * 110 / 256));
+        psy_petal(cx, cy, a, l * 55 / 100, wid * 55 / 100, bg_col(170 + en * 80 / 256));
+    }
+    for (i = 0; i < (uint32_t)f.fray / 12u; i++) {      /* the spores */
+        uint32_t h = i * 2654435761u, a = ((h >> 16) + tm / 3u) & 0xFFFFu;
+        int32_t r = R * (50 + (int32_t)((h >> 8) % 30u)) / 100;
+        if (bg_sin(tm * 5u + h) > 0)
+            cv_rect((cx + ((og_cos(a) * r) >> 15)) / 16, (cy + ((og_sin(a) * r) >> 15)) / 16, 1, 1, bg_col(220));
+    }
+    for (i = 0; i < (uint32_t)f.nuc; i++) {             /* the seeds: DETUNE apart */
+        uint32_t a = (tm / 2u + i * 65536u / (uint32_t)f.nuc) & 0xFFFFu;
+        int32_t d = f.nuc > 1 ? R * (8 + f.sep * 22 / 256) / 100 : 0;
+        int32_t x = cx + ((og_cos(a) * d) >> 15), y = cy + ((og_sin(a) * d) >> 15);
+        bg_ring(x, y, R * 9 / 100 + en / 16, bg_col(230));
+        bg_ring(x, y, R * 4 / 100, bg_col(256));
+    }
+}
 static int vx_draw(const track_t *t, int32_t x, int32_t y, int32_t w, int32_t h, int32_t en_home)
 {
     const engine_t *e = trk_engp(t);
     int32_t A[4] = {x, y, w, h}, cx = x * 16 + w * 8, cy = y * 16 + h * 8, s;
-    if (e == &ENG_FORMANT) {                             /* (the tract ~80 x 62 units about (-20, 37): the crown off) */
-        s = vx_fit(w, h, 80, 62);
-        vx_voice(t, cx + 5 * s / 4, cy - 37 * s / 16, s, en_home);
-    } else if (trk_eng(t) == ENGI_DRUM) {    /* (the kit ~128 x 92) */
+    (void)e;
+    if (trk_eng(t) == ENGI_DRUM) {    /* (the kit ~128 x 92) */
         s = vx_fit(w, h, 128, 92);
         vx_kit(t, cx - (s >> 4), cy + (48 * s >> 8), s, en_home, -1);
-    } else if (e == &ENG_ANIMAL)                        /* (the animal ~103 x 78) */
-        vx_animal(t, cx, cy, vx_fit(w, h, 103, 78), en_home);
-    else if (e == &ENG_ANALOG)
-        vx_analog(t, A, en_home);
-    else if (trk_eng(t) == ENGI_FM6)
-        vx_fm6(t, A, en_home, 6u, 0);
-    else if (e == &ENG_WHEEL)
-        vx_wheel(t, A, en_home);
-    else if (e == &ENG_NOISE)
-        vx_noise(t, A, en_home);
-    else if (e == &ENG_PHASE)
-        vx_phase(t, A, en_home);
-    else if (e == &ENG_LOFI)
-        vx_lofi(t, A, en_home);
-    else
-        return 0;
+    } else
+        psy_soul(t, A, en_home);                         /* (PSY: every synth; JIANT's creatures kept above, unused) */
     return 1;
 }
 /* EDIT > KIT (lane -1) and SOUND 1..4 (a DRUM track): the kit large on the panel, KIT over it on the left; on the right
